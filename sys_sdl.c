@@ -1,0 +1,244 @@
+
+#define NK_INCLUDE_FIXED_TYPES
+#define NK_INCLUDE_STANDARD_IO
+#define NK_INCLUDE_STANDARD_VARARGS
+#define NK_INCLUDE_DEFAULT_ALLOCATOR
+#define NK_INCLUDE_VERTEX_BUFFER_OUTPUT
+#define NK_INCLUDE_FONT_BAKING
+#define NK_INCLUDE_DEFAULT_FONT
+#define NK_IMPLEMENTATION
+#define NK_SDL_GL2_IMPLEMENTATION
+#define _CRT_SECURE_NO_WARNINGS
+
+#ifdef WIN32
+
+#include <io.h>
+#include "conio.h"
+#else
+#include <unistd.h>
+#include <fcntl.h>
+#include <sys/time.h>
+#endif
+
+#ifdef __ANDROID__
+#include <android/log.h>
+
+#ifndef FNDELAY
+#define FNDELAY		O_NDELAY
+#endif
+#endif
+
+#include <signal.h>
+
+#include "SDL/SDL.h"
+#include "SDL/SDL_opengl.h"
+
+#ifdef WIN32
+#ifdef _MSC_VER
+
+#pragma comment(lib, "OpenGl32.lib")
+//#pragma comment( lib, "C:/libcurl.a")
+//#pragma comment( lib, "C:/libcurl.dll.a")
+
+#pragma comment(lib, "sdl2.lib")
+#pragma comment(lib, "sdl2main.lib")
+#endif
+#endif
+
+#include "quakedef.h"
+// =======================================================================
+// General routines
+// =======================================================================
+
+void Sys_Shutdown (void)
+{
+#ifdef __ANDROID__
+	Sys_AllowProfiling(false);
+#endif
+#ifndef WIN32
+	fcntl (0, F_SETFL, fcntl (0, F_GETFL, 0) & ~FNDELAY);
+#endif
+	fflush(stdout);
+	SDL_Quit();
+}
+
+
+void Sys_Error (const char *error, ...)
+{
+	va_list argptr;
+	char string[MAX_INPUTLINE];
+
+// change stdin to non blocking
+#ifndef WIN32
+	fcntl (0, F_SETFL, fcntl (0, F_GETFL, 0) & ~FNDELAY);
+#endif
+
+	va_start (argptr,error);
+	dpvsnprintf (string, sizeof (string), error, argptr);
+	va_end (argptr);
+
+	Con_Printf ("Quake Error: %s\n", string);
+
+#ifdef WIN32
+	MessageBox(NULL, string, "Quake Error", MB_OK | MB_SETFOREGROUND | MB_ICONSTOP);
+#endif
+
+	Host_Shutdown ();
+	exit (1);
+}
+
+static int outfd = 1;
+void Sys_PrintToTerminal(const char *text)
+{
+#ifdef __ANDROID__
+	if (developer.integer > 0)
+	{
+		__android_log_write(ANDROID_LOG_DEBUG, com_argv[0], text);
+	}
+#else
+	if(outfd < 0)
+		return;
+#ifdef FNDELAY
+	// BUG: for some reason, NDELAY also affects stdout (1) when used on stdin (0).
+	// this is because both go to /dev/tty by default!
+	{
+		int origflags = fcntl (outfd, F_GETFL, 0);
+		fcntl (outfd, F_SETFL, origflags & ~FNDELAY);
+#endif
+#ifdef WIN32
+#define write _write
+#endif
+		while(*text)
+		{
+			fs_offset_t written = (fs_offset_t)write(outfd, text, (int)strlen(text));
+			if(written <= 0)
+				break; // sorry, I cannot do anything about this error - without an output
+			text += written;
+		}
+#ifdef FNDELAY
+		fcntl (outfd, F_SETFL, origflags);
+	}
+#endif
+	//fprintf(stdout, "%s", text);
+#endif
+}
+
+char *Sys_ConsoleInput(void)
+{
+//	if (cls.state == ca_dedicated)
+	{
+		static char text[MAX_INPUTLINE];
+		int len = 0;
+#ifdef WIN32
+		int c;
+
+		// read a line out
+		while (_kbhit ())
+		{
+			c = _getch ();
+			_putch (c);
+			if (c == '\r')
+			{
+				text[len] = 0;
+				_putch ('\n');
+				len = 0;
+				return text;
+			}
+			if (c == 8)
+			{
+				if (len)
+				{
+					_putch (' ');
+					_putch (c);
+					len--;
+					text[len] = 0;
+				}
+				continue;
+			}
+			text[len] = c;
+			len++;
+			text[len] = 0;
+			if (len == sizeof (text))
+				len = 0;
+		}
+#else
+		fd_set fdset;
+		struct timeval timeout;
+		FD_ZERO(&fdset);
+		FD_SET(0, &fdset); // stdin
+		timeout.tv_sec = 0;
+		timeout.tv_usec = 0;
+		if (select (1, &fdset, NULL, NULL, &timeout) != -1 && FD_ISSET(0, &fdset))
+		{
+			len = read (0, text, sizeof(text));
+			if (len >= 1)
+			{
+				// rip off the \n and terminate
+				text[len-1] = 0;
+				return text;
+			}
+		}
+#endif
+	}
+	return NULL;
+}
+
+char *Sys_GetClipboardData (void)
+{
+	char *data = NULL;
+	char *cliptext;
+
+	cliptext = SDL_GetClipboardText();
+	if (cliptext != NULL) {
+		size_t allocsize;
+		allocsize = strlen(cliptext) + 1;
+		data = (char *)Z_Malloc (allocsize);
+		strlcpy (data, cliptext, allocsize);
+		SDL_free(cliptext);
+	}
+
+	return data;
+}
+
+void Sys_InitConsole (void)
+{
+}
+
+// Main
+int main (int argc, char *argv[])
+{
+	signal(SIGFPE, SIG_IGN);
+
+	#ifdef __ANDROID__
+		Sys_AllowProfiling(true);
+	#endif
+
+	com_argc = argc;
+	com_argv = (const char **)argv;
+	Sys_ProvideSelfFD();
+
+	if(COM_CheckParm("-noterminal")) outfd = -1; // COMMANDLINEOPTION: sdl: -noterminal disables console output on stdout
+	else if(COM_CheckParm("-stderr")) outfd = 2; // COMMANDLINEOPTION: sdl: -stderr moves console output to stderr
+	else outfd = 1;
+
+	#ifndef WIN32
+		fcntl(0, F_SETFL, fcntl (0, F_GETFL, 0) | FNDELAY);
+	#endif
+
+	// we don't know which systems we'll want to init, yet...
+	SDL_Init(0);
+
+	Host_Main();
+
+	return 0;
+}
+
+qboolean sys_supportsdlgetticks = true;
+unsigned int Sys_SDL_GetTicks (void)
+{
+	return SDL_GetTicks();
+}
+void Sys_SDL_Delay (unsigned int milliseconds)
+{
+	SDL_Delay(milliseconds);
+}

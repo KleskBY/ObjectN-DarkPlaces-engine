@@ -1,0 +1,402 @@
+﻿<?xml version="1.0" encoding="utf-8"?>
+<Project ToolsVersion="4.0" xmlns="http://schemas.microsoft.com/developer/msbuild/2003">
+  <ItemGroup>
+    <ClCompile Include="bih.c" />
+    <ClCompile Include="builddate.c" />
+    <ClCompile Include="cd_shared.c" />
+    <ClCompile Include="clvm_cmds.c" />
+    <ClCompile Include="cmd.c" />
+    <ClCompile Include="collision.c" />
+    <ClCompile Include="common.c" />
+    <ClCompile Include="console.c" />
+    <ClCompile Include="crypto.c" />
+    <ClCompile Include="csprogs.c" />
+    <ClCompile Include="curves.c" />
+    <ClCompile Include="cvar.c" />
+    <ClCompile Include="dpvsimpledecode.c" />
+    <ClCompile Include="filematch.c" />
+    <ClCompile Include="fractalnoise.c" />
+    <ClCompile Include="fs.c" />
+    <ClCompile Include="ft2.c" />
+    <ClCompile Include="hmac.c" />
+    <ClCompile Include="host.c" />
+    <ClCompile Include="host_cmd.c" />
+    <ClCompile Include="image.c" />
+    <ClCompile Include="image_png.c" />
+    <ClCompile Include="jpeg.c" />
+    <ClCompile Include="keys.c" />
+    <ClCompile Include="lhnet.c" />
+    <ClCompile Include="libcurl.c" />
+    <ClCompile Include="mathlib.c" />
+    <ClCompile Include="matrixlib.c" />
+    <ClCompile Include="mdfour.c" />
+    <ClCompile Include="meshqueue.c" />
+    <ClCompile Include="mvm_cmds.c" />
+    <ClCompile Include="netconn.c" />
+    <ClCompile Include="palette.c" />
+    <ClCompile Include="polygon.c" />
+    <ClCompile Include="portals.c" />
+    <ClCompile Include="protocol.c" />
+    <ClCompile Include="svbsp.c" />
+    <ClCompile Include="svvm_cmds.c" />
+    <ClCompile Include="sys_sdl.c" />
+    <ClCompile Include="sys_shared.c" />
+    <ClCompile Include="thread_sdl.c" />
+    <ClCompile Include="utf8lib.c" />
+    <ClCompile Include="view.c" />
+    <ClCompile Include="wad.c" />
+    <ClCompile Include="world.c" />
+    <ClCompile Include="zone.c" />
+    <ClCompile Include="cap_avi.c">
+      <Filter>cap</Filter>
+    </ClCompile>
+    <ClCompile Include="cap_ogg.c">
+      <Filter>cap</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_collision.c">
+      <Filter>cl</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_demo.c">
+      <Filter>cl</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_input.c">
+      <Filter>cl</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_main.c">
+      <Filter>cl</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_parse.c">
+      <Filter>cl</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_particles.c">
+      <Filter>cl</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_screen.c">
+      <Filter>cl</Filter>
+    </ClCompile>
+    <ClCompile Include="cl_video.c">
+      <Filter>cl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_backend.c">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_draw.c">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_rmain.c">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_rsurf.c">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="gl_textures.c">
+      <Filter>gl</Filter>
+    </ClCompile>
+    <ClCompile Include="vid_sdl.c">
+      <Filter>vid</Filter>
+    </ClCompile>
+    <ClCompile Include="vid_shared.c">
+      <Filter>vid</Filter>
+    </ClCompile>
+    <ClCompile Include="r_explosion.c">
+      <Filter>r</Filter>
+    </ClCompile>
+    <ClCompile Include="r_lightning.c">
+      <Filter>r</Filter>
+    </ClCompile>
+    <ClCompile Include="r_modules.c">
+      <Filter>r</Filter>
+    </ClCompile>
+    <ClCompile Include="r_shadow.c">
+      <Filter>r</Filter>
+    </ClCompile>
+    <ClCompile Include="r_sky.c">
+      <Filter>r</Filter>
+    </ClCompile>
+    <ClCompile Include="r_sprites.c">
+      <Filter>r</Filter>
+    </ClCompile>
+    <ClCompile Include="prvm_cmds.c">
+      <Filter>pvm</Filter>
+    </ClCompile>
+    <ClCompile Include="prvm_edict.c">
+      <Filter>pvm</Filter>
+    </ClCompile>
+    <ClCompile Include="prvm_exec.c">
+      <Filter>pvm</Filter>
+    </ClCompile>
+    <ClCompile Include="snd_main.c">
+      <Filter>sound</Filter>
+    </ClCompile>
+    <ClCompile Include="snd_mem.c">
+      <Filter>sound</Filter>
+    </ClCompile>
+    <ClCompile Include="snd_mix.c">
+      <Filter>sound</Filter>
+    </ClCompile>
+    <ClCompile Include="snd_ogg.c">
+      <Filter>sound</Filter>
+    </ClCompile>
+    <ClCompile Include="snd_sdl.c">
+      <Filter>sound</Filter>
+    </ClCompile>
+    <ClCompile Include="snd_wav.c">
+      <Filter>sound</Filter>
+    </ClCompile>
+    <ClCompile Include="sv_demo.c">
+      <Filter>sv</Filter>
+    </ClCompile>
+    <ClCompile Include="sv_main.c">
+      <Filter>sv</Filter>
+    </ClCompile>
+    <ClCompile Include="sv_move.c">
+      <Filter>sv</Filter>
+    </ClCompile>
+    <ClCompile Include="sv_phys.c">
+      <Filter>sv</Filter>
+    </ClCompile>
+    <ClCompile Include="sv_user.c">
+      <Filter>sv</Filter>
+    </ClCompile>
+    <ClCompile Include="menu.c">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="sbar.c">
+      <Filter>gui</Filter>
+    </ClCompile>
+    <ClCompile Include="mod_skeletal_animatevertices_generic.c">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="mod_skeletal_animatevertices_sse.c">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="model_alias.c">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="model_brush.c">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="model_shared.c">
+      <Filter>model</Filter>
+    </ClCompile>
+    <ClCompile Include="model_sprite.c">
+      <Filter>model</Filter>
+    </ClCompile>
+  </ItemGroup>
+  <ItemGroup>
+    <ClInclude Include="bih.h" />
+    <ClInclude Include="bspfile.h" />
+    <ClInclude Include="cdaudio.h" />
+    <ClInclude Include="client.h" />
+    <ClInclude Include="clprogdefs.h" />
+    <ClInclude Include="clvm_cmds.h" />
+    <ClInclude Include="cmd.h" />
+    <ClInclude Include="collision.h" />
+    <ClInclude Include="common.h" />
+    <ClInclude Include="console.h" />
+    <ClInclude Include="crypto.h" />
+    <ClInclude Include="csprogs.h" />
+    <ClInclude Include="curves.h" />
+    <ClInclude Include="cvar.h" />
+    <ClInclude Include="dpvsimpledecode.h" />
+    <ClInclude Include="draw.h" />
+    <ClInclude Include="fs.h" />
+    <ClInclude Include="ft2.h" />
+    <ClInclude Include="ft2_defs.h" />
+    <ClInclude Include="ft2_fontdefs.h" />
+    <ClInclude Include="hmac.h" />
+    <ClInclude Include="image.h" />
+    <ClInclude Include="image_png.h" />
+    <ClInclude Include="input.h" />
+    <ClInclude Include="intoverflow.h" />
+    <ClInclude Include="jpeg.h" />
+    <ClInclude Include="keys.h" />
+    <ClInclude Include="lhfont.h" />
+    <ClInclude Include="lhnet.h" />
+    <ClInclude Include="libcurl.h" />
+    <ClInclude Include="mathlib.h" />
+    <ClInclude Include="matrixlib.h" />
+    <ClInclude Include="mdfour.h" />
+    <ClInclude Include="meshqueue.h" />
+    <ClInclude Include="mprogdefs.h" />
+    <ClInclude Include="netconn.h" />
+    <ClInclude Include="palette.h" />
+    <ClInclude Include="polygon.h" />
+    <ClInclude Include="portals.h" />
+    <ClInclude Include="pr_comp.h" />
+    <ClInclude Include="progdefs.h" />
+    <ClInclude Include="progs.h" />
+    <ClInclude Include="progsvm.h" />
+    <ClInclude Include="protocol.h" />
+    <ClInclude Include="qtypes.h" />
+    <ClInclude Include="quakedef.h" />
+    <ClInclude Include="resource.h" />
+    <ClInclude Include="screen.h" />
+    <ClInclude Include="SDLMain.h" />
+    <ClInclude Include="server.h" />
+    <ClInclude Include="shader_glsl.h" />
+    <ClInclude Include="spritegn.h" />
+    <ClInclude Include="svbsp.h" />
+    <ClInclude Include="sys.h" />
+    <ClInclude Include="thread.h" />
+    <ClInclude Include="timing.h" />
+    <ClInclude Include="utf8lib.h" />
+    <ClInclude Include="wad.h" />
+    <ClInclude Include="world.h" />
+    <ClInclude Include="zone.h" />
+    <ClInclude Include="nuklear\nuklear.h">
+      <Filter>nuklear</Filter>
+    </ClInclude>
+    <ClInclude Include="nuklear\nuklear_sdl_gl2.h">
+      <Filter>nuklear</Filter>
+    </ClInclude>
+    <ClInclude Include="cap_avi.h">
+      <Filter>cap</Filter>
+    </ClInclude>
+    <ClInclude Include="cap_ogg.h">
+      <Filter>cap</Filter>
+    </ClInclude>
+    <ClInclude Include="cl_collision.h">
+      <Filter>cl</Filter>
+    </ClInclude>
+    <ClInclude Include="cl_gecko.h">
+      <Filter>cl</Filter>
+    </ClInclude>
+    <ClInclude Include="cl_screen.h">
+      <Filter>cl</Filter>
+    </ClInclude>
+    <ClInclude Include="cl_video.h">
+      <Filter>cl</Filter>
+    </ClInclude>
+    <ClInclude Include="gl_backend.h">
+      <Filter>gl</Filter>
+    </ClInclude>
+    <ClInclude Include="glquake.h">
+      <Filter>gl</Filter>
+    </ClInclude>
+    <ClInclude Include="vid.h">
+      <Filter>vid</Filter>
+    </ClInclude>
+    <ClInclude Include="render.h">
+      <Filter>r</Filter>
+    </ClInclude>
+    <ClInclude Include="r_lerpanim.h">
+      <Filter>r</Filter>
+    </ClInclude>
+    <ClInclude Include="r_modules.h">
+      <Filter>r</Filter>
+    </ClInclude>
+    <ClInclude Include="r_shadow.h">
+      <Filter>r</Filter>
+    </ClInclude>
+    <ClInclude Include="r_textures.h">
+      <Filter>r</Filter>
+    </ClInclude>
+    <ClInclude Include="prvm_cmds.h">
+      <Filter>pvm</Filter>
+    </ClInclude>
+    <ClInclude Include="prvm_execprogram.h">
+      <Filter>pvm</Filter>
+    </ClInclude>
+    <ClInclude Include="prvm_offsets.h">
+      <Filter>pvm</Filter>
+    </ClInclude>
+    <ClInclude Include="sound.h">
+      <Filter>sound</Filter>
+    </ClInclude>
+    <ClInclude Include="snd_main.h">
+      <Filter>sound</Filter>
+    </ClInclude>
+    <ClInclude Include="snd_ogg.h">
+      <Filter>sound</Filter>
+    </ClInclude>
+    <ClInclude Include="snd_wav.h">
+      <Filter>sound</Filter>
+    </ClInclude>
+    <ClInclude Include="sv_demo.h">
+      <Filter>sv</Filter>
+    </ClInclude>
+    <ClInclude Include="menu.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="sbar.h">
+      <Filter>gui</Filter>
+    </ClInclude>
+    <ClInclude Include="modelgen.h">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="mod_skeletal_animatevertices_generic.h">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="mod_skeletal_animatevertices_sse.h">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="model_alias.h">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="model_brush.h">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="model_dpmodel.h">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="model_iqm.h">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="model_psk.h">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="model_shared.h">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="model_sprite.h">
+      <Filter>model</Filter>
+    </ClInclude>
+    <ClInclude Include="model_zymotic.h">
+      <Filter>model</Filter>
+    </ClInclude>
+  </ItemGroup>
+  <ItemGroup>
+    <ResourceCompile Include="darkplaces.rc" />
+  </ItemGroup>
+  <ItemGroup>
+    <Filter Include="nuklear">
+      <UniqueIdentifier>{ab0d2998-f41f-4997-86fb-0d1ce90ad560}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="vid">
+      <UniqueIdentifier>{47b2f246-58c4-4f15-a4a3-f5493afc0948}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cap">
+      <UniqueIdentifier>{c17ba159-0b8d-4f15-8d6d-0827b999ca4a}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="cl">
+      <UniqueIdentifier>{373ad505-d3e8-41e2-b75d-dadf8c634b71}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gl">
+      <UniqueIdentifier>{a217b47e-5e87-467a-a6d2-49fb72d5d0e3}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="pvm">
+      <UniqueIdentifier>{3e0692d2-b968-4afd-85bc-fd7760367da5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="r">
+      <UniqueIdentifier>{082ab4de-906f-4a12-8c53-9060cb2317a5}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sound">
+      <UniqueIdentifier>{b3be3c18-2fc5-491b-9035-f49da11ae139}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="sv">
+      <UniqueIdentifier>{89cf7eab-76a0-4a3e-9d31-c3dd8dec5a65}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="gui">
+      <UniqueIdentifier>{80d803e7-1c60-43b5-8a42-71b6db07008b}</UniqueIdentifier>
+    </Filter>
+    <Filter Include="model">
+      <UniqueIdentifier>{7b463c14-8c69-48d8-8a6e-51e648327e8c}</UniqueIdentifier>
+    </Filter>
+  </ItemGroup>
+  <ItemGroup>
+    <None Include="mymenu.h">
+      <Filter>nuklear</Filter>
+    </None>
+  </ItemGroup>
+</Project>

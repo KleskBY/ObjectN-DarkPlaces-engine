@@ -1,6 +1,6 @@
 # ObjectN DarkPlaces engine
  DarkPlaces engine modification<br>
-<b>Changes:</b><br>
+<h3>Changes:</h3>
 <ul>
  <li>Fix texture size</li>
  <li>Fix anoying bug that you cant reconnect to the server before sending disconnect</li>

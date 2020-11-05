@@ -13,7 +13,7 @@
  <li>Remove useless trash from other mods</li>
  <li>Showfps fix and placement</li>
  <li>Spectator hud fix</li>
- <li>Other small fixes, i dont remember</li>
+ <li>Other small fixes</li>
 </ul>
 <br>
 <h3>How to compile:</h3>

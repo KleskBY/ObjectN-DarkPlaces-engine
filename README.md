@@ -16,7 +16,7 @@
  <li>Other small fixes, i dont remember</li>
 </ul>
 <br>
-<b>How to compile:</b>
+<h3>How to compile:</h3>
 sudo apt-get install gcc<br>
 sudo apt-get install g++<br>
 sudo apt-get install zlib1g-dev<br>

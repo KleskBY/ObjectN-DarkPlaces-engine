@@ -88,21 +88,62 @@ static void M_LanConfig_Key (int key, int ascii);
 static void M_GameOptions_Key (int key, int ascii);
 static void M_ServerList_Key (int key, int ascii);
 
-static int CursorX, CursorY, mouseX, mouseY;
+static int CursorX, CursorY, mouseX, mouseY, LastCursorX, LastCursorY;
+static double LastCheck;
 void GetMyCursorPos()
 {
+	if (LastCheck + 0.25 < realtime)
+	{
+		LastCursorX = CursorX;
+		LastCursorY = CursorY;
+		LastCheck = realtime;
+	}
 	if (SDL_GetMouseState(&mouseX, &mouseY))
 	{
-		//float CoefX = (float)vid_conwidth.integer / (float)vid.mode.width;
-		//float CoefY = (float)vid_conheight.integer / (float)vid.mode.height;
-		//CursorX = mouseX * CoefX;
-		//CursorY = mouseY * CoefY;
-
 		CursorX = mouseX * 1000 / vid.mode.width;
 		CursorY = mouseY * 1000 / vid.mode.height;
 	}
 }
 
+static void CursorMouseMove(int* cursor, int amount)
+{
+	if (LastCursorX != CursorX && LastCursorY != CursorY)
+	{
+		if (CursorX > 130 && CursorX < 540)
+		{
+			if (CursorY > 470 && CursorY <= 540) *cursor = 0;
+			else if (amount > 1 && CursorY > 540 && CursorY <= 602) *cursor = 1;
+			else if (amount > 2 && CursorY > 602 && CursorY <= 666) *cursor = 2;
+			else if (amount > 3 && CursorY > 666 && CursorY <= 732) *cursor = 3;
+			else if (amount > 4 && CursorY > 732 && CursorY <= 800) *cursor = 4;
+		}
+	}
+}
+
+static void CursorMouseMoveOptions(int* cursor, int StartY, int EndY)
+{
+	if (LastCursorX != CursorX && LastCursorY != CursorY)
+	if (CursorX > 310 && CursorX < 800 && CursorY > StartY && CursorY < EndY) *cursor = (CursorY - StartY) / 25; //286 Y start; 25 heigh of element
+}
+static void CursorMouseMoveDisplay(int* cursor)
+{
+	if (LastCursorX != CursorX && LastCursorY != CursorY)
+	{
+		if (CursorX > 310 && CursorX < 800 && CursorY > 400 && CursorY < 450) *cursor = 0;
+		else if (CursorX > 310 && CursorX < 800 && CursorY > 460 && CursorY < 684) *cursor = (CursorY - 460) / 25 + 1; //286 Y start; 25 heigh of element
+	}
+}
+static void CursorMouseMoveServers(int* cursor, int StartY, int EndY, int max)
+{
+	int r = 0;
+	if (LastCursorX != CursorX && LastCursorY != CursorY)
+		if (CursorX > 220 && CursorX < 780 && CursorY > StartY && CursorY < EndY)
+		{
+			r = (CursorY - StartY) / 50;
+			if (r > max) r = max;
+			*cursor = r;
+		}
+}
 
 static qboolean	m_entersound;		///< play after drawing a frame, so caching won't disrupt the sound
 
@@ -266,16 +307,8 @@ void M_Menu_Main_f (void)
 
 	// check if the game data is missing and use a different main menu if so
 	m_missingdata = !forceqmenu.integer && !Draw_IsPicLoaded(Draw_CachePic_Flags(s, CACHEPICFLAG_FAILONMISSING));
-	if (m_missingdata)
-		MAIN_ITEMS = 2;
+	if (m_missingdata) MAIN_ITEMS = 2;
 
-	/*
-	if (key_dest != key_menu)
-	{
-		m_save_demonum = cls.demonum;
-		cls.demonum = -1;
-	}
-	*/
 	key_dest = key_menu;
 	m_state = m_main;
 	m_entersound = true;
@@ -306,8 +339,8 @@ static void M_Main_Draw (void)
 	}
 
 	M_Background(320, 200);
+	CursorMouseMove(&m_main_cursor, 5);
 	M_DrawPic (72, 32, "gfx/mainmenu");
-
 	f = (int)(realtime * 10)%6;
 	M_DrawPic (54, 32 + m_main_cursor * 20, va(vabuf, sizeof(vabuf), "gfx/menudot%i", f+1));
 	//DrawQ_String(0, vid_conheight.integer -100, "TEST", 8, 8, 8, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
@@ -315,7 +348,6 @@ static void M_Main_Draw (void)
 	//DrawQ_Pic(menu_x + cx, menu_y + cy, Draw_CachePic(picname), 0, 0, 1, 1, 1, 1, 0);
 
 }
-
 
 static void M_Main_Key (int key, int ascii)
 {
@@ -444,6 +476,7 @@ static void M_SinglePlayer_Draw (void)
 
 	M_Background(320, 200);
 	{
+		CursorMouseMove(&m_singleplayer_cursor, 3);
 		M_DrawPic (72, 32, "gfx/sp_menu");
 		int f = (int)(realtime * 10)%6;
 		M_DrawPic (54, 32 + m_singleplayer_cursor * 20, va(vabuf, sizeof(vabuf), "gfx/menudot%i", f+1));
@@ -821,7 +854,7 @@ static void M_Load_Draw (void)
 	int		i;
 	cachepic_t	*p;
 
-	M_Background(320, 200);
+	M_Background2(320, 200);
 
 	p = Draw_CachePic ("gfx/p_load");
 	M_DrawPic ( (320-Draw_GetPicWidth(p))/2, 4, "gfx/p_load" );
@@ -829,7 +862,9 @@ static void M_Load_Draw (void)
 	for (i=0 ; i< MAX_SAVEGAMES; i++) M_Print(84, 32 + 8*i, m_filenames[i]);
 
 // line cursor
-	M_DrawCharacter (8, 32 + load_cursor*8, 12+((int)(realtime*4)&1));
+	CursorMouseMoveOptions(&load_cursor, 286, 586);
+	DrawQ_Fill(menu_x, 92 + load_cursor * 8, 320, 8, (0.5 + 0.2 * sin(realtime * M_PI)), 0, 0, 0.5, 0);
+	//M_DrawCharacter (8, 32 + load_cursor*8, 12+((int)(realtime*4)&1));
 }
 
 
@@ -838,16 +873,17 @@ static void M_Save_Draw (void)
 	int		i;
 	cachepic_t	*p;
 
-	M_Background(320, 200);
+	M_Background2(320, 200);
 
 	p = Draw_CachePic ("gfx/p_save");
 	M_DrawPic ( (320-Draw_GetPicWidth(p))/2, 4, "gfx/p_save");
 
 	for (i=0 ; i<MAX_SAVEGAMES ; i++)
-		M_Print(16, 32 + 8*i, m_filenames[i]);
+		M_Print(84, 32 + 8*i, m_filenames[i]);
 
-// line cursor
-	M_DrawCharacter (8, 32 + load_cursor*8, 12+((int)(realtime*4)&1));
+	CursorMouseMoveOptions(&load_cursor, 286, 586);
+	DrawQ_Fill(menu_x, 92 + load_cursor * 8, 320, 8, (0.5 + 0.2 * sin(realtime * M_PI)), 0, 0, 0.5, 0);
+	//M_DrawCharacter (8, 32 + load_cursor*8, 12+((int)(realtime*4)&1));
 }
 
 
@@ -856,26 +892,11 @@ static void M_Load_Key (int k, int ascii)
 	char vabuf[1024];
 	switch (k)
 	{
-	case K_MOUSE1:
-		GetMyCursorPos();
-		if (CursorX > 130 && CursorX < 540)
-		{
-			if (CursorY > 470 && CursorY <= 540)
-			{
-				m_entersound = true;
-				M_Menu_LanConfig_f();
-			}
-			if (CursorY > 540 && CursorY <= 602)
-			{
-				m_entersound = true;
-				M_Menu_LanConfig_f();
-			}
-		}
-		break;
 	case K_ESCAPE:
 			M_Menu_SinglePlayer_f ();
 		break;
 
+	case K_MOUSE1:
 	case K_ENTER:
 		S_LocalSound ("sound/menu/menu2.wav");
 		if (!loadable[load_cursor])
@@ -915,6 +936,7 @@ static void M_Save_Key (int k, int ascii)
 			M_Menu_SinglePlayer_f ();
 		break;
 
+	case K_MOUSE1:
 	case K_ENTER:
 		m_state = m_none;
 		key_dest = key_game;
@@ -961,6 +983,7 @@ static void M_MultiPlayer_Draw (void)
 	char vabuf[1024];
 
 	M_Background(320, 200);
+	CursorMouseMove(&m_multiplayer_cursor, 2);
 	M_DrawPic (72, 32, "gfx/mp_menu");
 	f = (int)(realtime * 10)%6;
 	M_DrawPic (54, 32 + m_multiplayer_cursor * 20, va(vabuf, sizeof(vabuf), "gfx/menudot%i", f+1));
@@ -1042,7 +1065,7 @@ static void M_DrawCheckbox (int x, int y, int on)
 }
 
 
-#define OPTIONS_ITEMS 24
+#define OPTIONS_ITEMS 23
 
 
 static int options_cursor;
@@ -1075,7 +1098,6 @@ static void M_Menu_Options_AdjustSliders (int dir)
 	else if (options_cursor == optnum++) Cvar_SetValueQuick(&sensitivity, bound(1, sensitivity.value + dir * 0.5, 20));
 	else if (options_cursor == optnum++) Cvar_SetValueQuick(&m_pitch, -m_pitch.value);
 	else if (options_cursor == optnum++) Cvar_SetValueQuick(&showfps, !showfps.integer);
-	else if (options_cursor == optnum++) {f = !(showdate.integer && showtime.integer);Cvar_SetValueQuick(&showdate, f);Cvar_SetValueQuick(&showtime, f);}
 	else if (options_cursor == optnum++) ;
 	else if (options_cursor == optnum++) Cvar_SetValueQuick(&r_hdr_scenebrightness, bound(1, r_hdr_scenebrightness.value + dir * 0.1, 4));
 	else if (options_cursor == optnum++) Cvar_SetValueQuick(&v_contrast, bound(1, v_contrast.value + dir * 0.1, 2));
@@ -1132,7 +1154,6 @@ static void M_Options_Draw (void)
 	cachepic_t	*p;
 
 	M_Background2(320, 200);
-
 	//M_DrawPic(16, 4, "gfx/qplaque");
 	p = Draw_CachePic ("gfx/p_option");
 	M_DrawPic((320-Draw_GetPicWidth(p))/2, 4, "gfx/p_option");
@@ -1142,6 +1163,8 @@ static void M_Options_Draw (void)
 	//visible = (int)((menu_height - 32) / 8);
 	//m_opty = 32 - bound(0, m_optcursor - (visible >> 1), max(0, OPTIONS_ITEMS - visible)) * 8;
 	m_opty = 32;
+	
+	CursorMouseMoveOptions(&options_cursor, 286, 890);
 
 	M_Options_PrintCommand( "    Customize controls", true);
 	M_Options_PrintCommand( "         Go to console", true);
@@ -1151,7 +1174,7 @@ static void M_Options_Draw (void)
 	M_Options_PrintSlider(  "           Mouse Speed", true, sensitivity.value, 1, 20);
 	M_Options_PrintCheckbox("          Invert Mouse", true, m_pitch.value < 0);
 	M_Options_PrintCheckbox("        Show Framerate", true, showfps.integer);
-	M_Options_PrintCheckbox("    Show Date and Time", true, showdate.integer && showtime.integer);
+	//M_Options_PrintCheckbox("    Show Date and Time", true, showdate.integer && showtime.integer);
 	M_Options_PrintCommand( "     Custom Brightness", true);
 	M_Options_PrintSlider(  "       Game Brightness", true, r_hdr_scenebrightness.value, 1, 4);
 	M_Options_PrintSlider(  "            Brightness", true, v_contrast.value, 1, 2);
@@ -1168,6 +1191,10 @@ static void M_Options_Draw (void)
 	M_Options_PrintCommand( "      Lighting:   High", true);
 	M_Options_PrintCommand( "      Lighting:   Full", true);
 
+
+	char str[60] = "LEFT MOUSE BUTTON - INCREASE; RIGHT MOUSE BUTTON - DECREASE";
+	DrawQ_String(vid_conwidth.integer * 0.5 - strlen(str) * 3, vid_conheight.integer * 0.9, str, 0, 6, 6, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
+
 }
 
 
@@ -1175,104 +1202,11 @@ static void M_Options_Key (int k, int ascii)
 {
 	switch (k)
 	{
-
-	case K_MOUSE1:
-		GetMyCursorPos();
-		if (CursorX > 300 && CursorX < 700) //noslider buttons
-		{
-			if (CursorY > 286 && CursorY <= 312) M_Menu_Keys_f();
-			else if (CursorY > 312 && CursorY <= 336)
-			{
-				m_state = m_none;
-				key_dest = key_game;
-				Con_ToggleConsole_f();
-			}
-			else if (CursorY > 336 && CursorY <= 360) M_Menu_Reset_f();
-			else if (CursorY > 360 && CursorY <= 384) M_Menu_Video_f();
-			else if (CursorY > 438 && CursorY <= 462) Cvar_SetValueQuick(&m_pitch, -m_pitch.value);
-			else if (CursorY > 462 && CursorY <= 486) Cvar_SetValueQuick(&showfps, !showfps.value);
-			else if (CursorY > 486 && CursorY <= 510) { int f = !(showdate.integer && showtime.integer); Cvar_SetValueQuick(&showdate, f); Cvar_SetValueQuick(&showtime, f); }
-			else if (CursorY > 510 && CursorY <= 534) M_Menu_Options_ColorControl_f();
-
-			else if (CursorY > 662 && CursorY <= 686) M_Menu_Options_Effects_f();
-			else if (CursorY > 686 && CursorY <= 710) { m_entersound = true; Cbuf_AddText("cl_particles 1;cl_particles_quake 1;cl_particles_quality 1;cl_particles_explosions_shell 0;r_explosionclip 1;cl_stainmaps 0;cl_stainmaps_clearonload 1;cl_decals 0;cl_particles_bulletimpacts 1;cl_particles_smoke 1;cl_particles_sparks 1;cl_particles_bubbles 1;cl_particles_blood 1;cl_particles_blood_alpha 1;cl_particles_blood_bloodhack 0;cl_beams_polygons 0;cl_beams_instantaimhack 0;cl_beams_quakepositionhack 1;cl_beams_lightatend 0;r_lerpmodels 1;r_lerpsprites 1;r_lerplightstyles 0;gl_polyblend 1;r_skyscroll1 1;r_skyscroll2 2;r_waterwarp 1;r_wateralpha 1;r_waterscroll 1\n"); }
-			else if (CursorY > 710 && CursorY <= 734) { m_entersound = true; Cbuf_AddText("cl_particles 1;cl_particles_quake 0;cl_particles_quality 1;cl_particles_explosions_shell 0;r_explosionclip 1;cl_stainmaps 0;cl_stainmaps_clearonload 1;cl_decals 1;cl_particles_bulletimpacts 1;cl_particles_smoke 1;cl_particles_sparks 1;cl_particles_bubbles 1;cl_particles_blood 1;cl_particles_blood_alpha 1;cl_particles_blood_bloodhack 1;cl_beams_polygons 1;cl_beams_instantaimhack 0;cl_beams_quakepositionhack 1;cl_beams_lightatend 0;r_lerpmodels 1;r_lerpsprites 1;r_lerplightstyles 0;gl_polyblend 1;r_skyscroll1 1;r_skyscroll2 2;r_waterwarp 1;r_wateralpha 1;r_waterscroll 1\n"); }
-			else if (CursorY > 734 && CursorY <= 758) { m_entersound = true; Cbuf_AddText("cl_particles 1;cl_particles_quake 0;cl_particles_quality 2;cl_particles_explosions_shell 0;r_explosionclip 1;cl_stainmaps 1;cl_stainmaps_clearonload 1;cl_decals 1;cl_particles_bulletimpacts 1;cl_particles_smoke 1;cl_particles_sparks 1;cl_particles_bubbles 1;cl_particles_blood 1;cl_particles_blood_alpha 1;cl_particles_blood_bloodhack 1;cl_beams_polygons 1;cl_beams_instantaimhack 0;cl_beams_quakepositionhack 1;cl_beams_lightatend 0;r_lerpmodels 1;r_lerpsprites 1;r_lerplightstyles 0;gl_polyblend 1;r_skyscroll1 1;r_skyscroll2 2;r_waterwarp 1;r_wateralpha 1;r_waterscroll 1\n"); }
-		
-			else if (CursorY > 758 && CursorY <= 782) M_Menu_Options_Graphics_f();
-			else if (CursorY > 782 && CursorY <= 806) { m_entersound = true; Cbuf_AddText("r_coronas 1;gl_flashblend 1;r_shadow_gloss 0;r_shadow_realtime_dlight 0;r_shadow_realtime_dlight_shadows 0;r_shadow_realtime_world 0;r_shadow_realtime_world_lightmaps 0;r_shadow_realtime_world_shadows 1;r_bloom 0"); }
-			else if (CursorY > 806 && CursorY <= 830) { m_entersound = true; Cbuf_AddText("r_coronas 1;gl_flashblend 0;r_shadow_gloss 1;r_shadow_realtime_dlight 1;r_shadow_realtime_dlight_shadows 0;r_shadow_realtime_world 0;r_shadow_realtime_world_lightmaps 0;r_shadow_realtime_world_shadows 1;r_bloom 0"); }
-			else if (CursorY > 830 && CursorY <= 854) { m_entersound = true; Cbuf_AddText("r_coronas 1;gl_flashblend 0;r_shadow_gloss 1;r_shadow_realtime_dlight 1;r_shadow_realtime_dlight_shadows 1;r_shadow_realtime_world 0;r_shadow_realtime_world_lightmaps 0;r_shadow_realtime_world_shadows 1;r_bloom 1"); }
-			else if (CursorY > 854 && CursorY <= 878) { m_entersound = true; Cbuf_AddText("r_coronas 1;gl_flashblend 0;r_shadow_gloss 1;r_shadow_realtime_dlight 1;r_shadow_realtime_dlight_shadows 1;r_shadow_realtime_world 1;r_shadow_realtime_world_lightmaps 0;r_shadow_realtime_world_shadows 1;r_bloom 1"); }
-
-		}
-
-		if (CursorX > 660 && CursorX < 860) //633 760
-		{
-			if (CursorY > 386 && CursorY <= 412)
-			{
-				options_cursor = 4;
-				int x = 690 + crosshair.integer * 18.17;
-				int Diff = (abs(CursorX - x)) / 18.17;
-				if (CursorX < x) M_Menu_Options_AdjustSliders(-Diff);
-				else if (CursorX > x) M_Menu_Options_AdjustSliders(Diff);
-			}
-			else if (CursorY > 412 && CursorY <= 436)
-			{
-				options_cursor = 5;
-				int x = 690 + sensitivity.value * 6.35;
-				int Diff = (abs(CursorX - x)) / 3;
-				if (CursorX < x) M_Menu_Options_AdjustSliders(-Diff);
-				else if (CursorX > x) M_Menu_Options_AdjustSliders(Diff);
-			}
-			else if (CursorY > 538 && CursorY <= 562)
-			{
-				options_cursor = 10;
-				int x = 690 + ((r_hdr_scenebrightness.value-1)*10 ) * 4.23;
-				int Diff = (abs(CursorX - x)) / 4.23;
-				if (CursorX < x) M_Menu_Options_AdjustSliders(-Diff);
-				else if (CursorX > x) M_Menu_Options_AdjustSliders(Diff);
-			}
-			else if (CursorY > 562 && CursorY <= 588)
-			{
-				options_cursor = 11;
-				int x = 690 + ((v_contrast.value - 1) * 10) *12.7;
-				int Diff = (abs(CursorX - x)) / 12.7;
-				if (CursorX < x) M_Menu_Options_AdjustSliders(-Diff);
-				else if (CursorX > x) M_Menu_Options_AdjustSliders(Diff);
-			}
-			else if (CursorY > 588 && CursorY <= 612)
-			{
-				options_cursor = 12;
-				int x = 690 + ((v_gamma.value - 0.5) * 10) * 5;
-				int Diff = (abs(CursorX - x)) / 5;
-				if (CursorX < x) M_Menu_Options_AdjustSliders(-Diff);
-				else if (CursorX > x) M_Menu_Options_AdjustSliders(Diff);
-			}
-			else if (CursorY > 612 && CursorY <= 636)
-			{
-				options_cursor = 13;
-				int x = 690 + ((volume.value) * 10) * 12.7;
-				int Diff = (abs(CursorX - x)) / 12.7;
-				if (CursorX < x) M_Menu_Options_AdjustSliders(-Diff);
-				else if (CursorX > x) M_Menu_Options_AdjustSliders(Diff);
-			}
-			else if (CursorY > 636 && CursorY <= 660)
-			{
-				options_cursor = 14;
-				int x = 690 + ((bgmvolume.value) * 10) * 12.7;
-				int Diff = (abs(CursorX - x)) / 12.7;
-				if (CursorX < x) M_Menu_Options_AdjustSliders(-Diff);
-				else if (CursorX > x) M_Menu_Options_AdjustSliders(Diff);
-			}
-		}
-
-		break;
-
 	case K_ESCAPE:
 		M_Menu_Main_f ();
 		break;
 
+	case K_MOUSE1:
 	case K_ENTER:
 		m_entersound = true;
 		switch (options_cursor)
@@ -1291,34 +1225,34 @@ static void M_Options_Key (int k, int ascii)
 		case 3:
 			M_Menu_Video_f ();
 			break;
-		case 10:
+		case 8:
 			M_Menu_Options_ColorControl_f ();
 			break;
-		case 15: // Customize Effects
+		case 14: // Customize Effects
 			M_Menu_Options_Effects_f ();
 			break;
-		case 16: // Effects: Quake
+		case 15: // Effects: Quake
 			Cbuf_AddText("cl_particles 1;cl_particles_quake 1;cl_particles_quality 1;cl_particles_explosions_shell 0;r_explosionclip 1;cl_stainmaps 0;cl_stainmaps_clearonload 1;cl_decals 0;cl_particles_bulletimpacts 1;cl_particles_smoke 1;cl_particles_sparks 1;cl_particles_bubbles 1;cl_particles_blood 1;cl_particles_blood_alpha 1;cl_particles_blood_bloodhack 0;cl_beams_polygons 0;cl_beams_instantaimhack 0;cl_beams_quakepositionhack 1;cl_beams_lightatend 0;r_lerpmodels 1;r_lerpsprites 1;r_lerplightstyles 0;gl_polyblend 1;r_skyscroll1 1;r_skyscroll2 2;r_waterwarp 1;r_wateralpha 1;r_waterscroll 1\n");
 			break;
-		case 17: // Effects: Normal
+		case 16: // Effects: Normal
 			Cbuf_AddText("cl_particles 1;cl_particles_quake 0;cl_particles_quality 1;cl_particles_explosions_shell 0;r_explosionclip 1;cl_stainmaps 0;cl_stainmaps_clearonload 1;cl_decals 1;cl_particles_bulletimpacts 1;cl_particles_smoke 1;cl_particles_sparks 1;cl_particles_bubbles 1;cl_particles_blood 1;cl_particles_blood_alpha 1;cl_particles_blood_bloodhack 1;cl_beams_polygons 1;cl_beams_instantaimhack 0;cl_beams_quakepositionhack 1;cl_beams_lightatend 0;r_lerpmodels 1;r_lerpsprites 1;r_lerplightstyles 0;gl_polyblend 1;r_skyscroll1 1;r_skyscroll2 2;r_waterwarp 1;r_wateralpha 1;r_waterscroll 1\n");
 			break;
-		case 18: // Effects: High
+		case 17: // Effects: High
 			Cbuf_AddText("cl_particles 1;cl_particles_quake 0;cl_particles_quality 2;cl_particles_explosions_shell 0;r_explosionclip 1;cl_stainmaps 1;cl_stainmaps_clearonload 1;cl_decals 1;cl_particles_bulletimpacts 1;cl_particles_smoke 1;cl_particles_sparks 1;cl_particles_bubbles 1;cl_particles_blood 1;cl_particles_blood_alpha 1;cl_particles_blood_bloodhack 1;cl_beams_polygons 1;cl_beams_instantaimhack 0;cl_beams_quakepositionhack 1;cl_beams_lightatend 0;r_lerpmodels 1;r_lerpsprites 1;r_lerplightstyles 0;gl_polyblend 1;r_skyscroll1 1;r_skyscroll2 2;r_waterwarp 1;r_wateralpha 1;r_waterscroll 1\n");
 			break;
-		case 19:
+		case 18:
 			M_Menu_Options_Graphics_f ();
 			break;
-		case 20: // Lighting: Flares
+		case 19: // Lighting: Flares
 			Cbuf_AddText("r_coronas 1;gl_flashblend 1;r_shadow_gloss 0;r_shadow_realtime_dlight 0;r_shadow_realtime_dlight_shadows 0;r_shadow_realtime_world 0;r_shadow_realtime_world_lightmaps 0;r_shadow_realtime_world_shadows 1;r_bloom 0");
 			break;
-		case 21: // Lighting: Normal
+		case 20: // Lighting: Normal
 			Cbuf_AddText("r_coronas 1;gl_flashblend 0;r_shadow_gloss 1;r_shadow_realtime_dlight 1;r_shadow_realtime_dlight_shadows 0;r_shadow_realtime_world 0;r_shadow_realtime_world_lightmaps 0;r_shadow_realtime_world_shadows 1;r_bloom 0");
 			break;
-		case 22: // Lighting: High
+		case 21: // Lighting: High
 			Cbuf_AddText("r_coronas 1;gl_flashblend 0;r_shadow_gloss 1;r_shadow_realtime_dlight 1;r_shadow_realtime_dlight_shadows 1;r_shadow_realtime_world 0;r_shadow_realtime_world_lightmaps 0;r_shadow_realtime_world_shadows 1;r_bloom 1");
 			break;
-		case 23: // Lighting: Full
+		case 22: // Lighting: Full
 			Cbuf_AddText("r_coronas 1;gl_flashblend 0;r_shadow_gloss 1;r_shadow_realtime_dlight 1;r_shadow_realtime_dlight_shadows 1;r_shadow_realtime_world 1;r_shadow_realtime_world_lightmaps 0;r_shadow_realtime_world_shadows 1;r_bloom 1");
 			break;
 		default:
@@ -1341,6 +1275,7 @@ static void M_Options_Key (int k, int ascii)
 			options_cursor = 0;
 		break;
 
+	case K_MOUSE2:
 	case K_LEFTARROW:
 		M_Menu_Options_AdjustSliders (-1);
 		break;
@@ -1428,7 +1363,7 @@ static void M_Options_Effects_Draw (void)
 	int visible;
 	cachepic_t	*p;
 
-	M_Background(320, bound(200, 32 + OPTIONS_EFFECTS_ITEMS * 8, vid_conheight.integer));
+	M_Background2(320, bound(200, 32 + OPTIONS_EFFECTS_ITEMS * 8, vid_conheight.integer));
 
 	//M_DrawPic(16, 4, "gfx/qplaque");
 	p = Draw_CachePic ("gfx/p_option");
@@ -1438,6 +1373,7 @@ static void M_Options_Effects_Draw (void)
 	m_optnum = 0;
 	visible = (int)((menu_height - 32) / 8);
 	m_opty = 32 - bound(0, m_optcursor - (visible >> 1), max(0, OPTIONS_EFFECTS_ITEMS - visible)) * 8;
+	CursorMouseMoveOptions(&options_effects_cursor, 112,990);
 
 	M_Options_PrintCheckbox("             Particles", true, cl_particles.integer);
 	M_Options_PrintCheckbox(" Quake-style Particles", true, cl_particles_quake.integer);
@@ -1485,6 +1421,7 @@ static void M_Options_Effects_Key (int k, int ascii)
 		M_Menu_Options_f ();
 		break;
 
+	case K_MOUSE1:
 	case K_ENTER:
 		M_Menu_Options_Effects_AdjustSliders (1);
 		break;
@@ -1503,6 +1440,7 @@ static void M_Options_Effects_Key (int k, int ascii)
 			options_effects_cursor = 0;
 		break;
 
+	case K_MOUSE2:
 	case K_LEFTARROW:
 		M_Menu_Options_Effects_AdjustSliders (-1);
 		break;
@@ -1575,7 +1513,7 @@ static void M_Options_Graphics_Draw (void)
 	int visible;
 	cachepic_t	*p;
 
-	M_Background(320, bound(200, 32 + OPTIONS_GRAPHICS_ITEMS * 8, vid_conheight.integer));
+	M_Background2(320, bound(200, 32 + OPTIONS_GRAPHICS_ITEMS * 8, vid_conheight.integer));
 
 	//M_DrawPic(16, 4, "gfx/qplaque");
 	p = Draw_CachePic ("gfx/p_option");
@@ -1585,6 +1523,7 @@ static void M_Options_Graphics_Draw (void)
 	m_optnum = 0;
 	visible = (int)((menu_height - 32) / 8);
 	m_opty = 32 - bound(0, m_optcursor - (visible >> 1), max(0, OPTIONS_GRAPHICS_ITEMS - visible)) * 8;
+	CursorMouseMoveOptions(&options_graphics_cursor, 290, 730);
 
 	M_Options_PrintSlider(  "      Corona Intensity", true, r_coronas.value, 0, 4);
 	M_Options_PrintCheckbox("      Use Only Coronas", true, gl_flashblend.integer);
@@ -1604,6 +1543,10 @@ static void M_Options_Graphics_Draw (void)
 	M_Options_PrintSlider(  "            Bloom Blur", r_bloom.integer, r_bloom_blur.value, 1, 16);
 	M_Options_PrintSlider(  "      Bloom Resolution", r_bloom.integer, r_bloom_resolution.value, 64, 2048);
 	M_Options_PrintCommand( "      Restart Renderer", true);
+
+	char str[60] = "LEFT MOUSE BUTTON - INCREASE; RIGHT MOUSE BUTTON - DECREASE";
+	DrawQ_String(vid_conwidth.integer * 0.5 - strlen(str) * 3, vid_conheight.integer * 0.9, str, 0, 6, 6, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
+
 }
 
 
@@ -1615,6 +1558,7 @@ static void M_Options_Graphics_Key (int k, int ascii)
 		M_Menu_Options_f ();
 		break;
 
+	case K_MOUSE1:
 	case K_ENTER:
 		M_Menu_Options_Graphics_AdjustSliders (1);
 		break;
@@ -1633,6 +1577,7 @@ static void M_Options_Graphics_Key (int k, int ascii)
 			options_graphics_cursor = 0;
 		break;
 
+	case K_MOUSE2:
 	case K_LEFTARROW:
 		M_Menu_Options_Graphics_AdjustSliders (-1);
 		break;
@@ -1765,7 +1710,7 @@ static void M_Options_ColorControl_Draw (void)
 
 	dither = Draw_CachePic_Flags ("gfx/colorcontrol/ditherpattern", CACHEPICFLAG_NOCLAMP);
 
-	M_Background(320, 256);
+	M_Background2(320, 256);
 
 	//M_DrawPic(16, 4, "gfx/qplaque");
 	p = Draw_CachePic ("gfx/p_option");
@@ -1775,6 +1720,7 @@ static void M_Options_ColorControl_Draw (void)
 	m_optnum = 0;
 	visible = (int)((menu_height - 32) / 8);
 	m_opty = 32 - bound(0, m_optcursor - (visible >> 1), max(0, OPTIONS_COLORCONTROL_ITEMS - visible)) * 8;
+	CursorMouseMoveOptions(&options_colorcontrol_cursor, 200, 622);
 
 	M_Options_PrintCommand( "     Reset to defaults", true);
 	M_Options_PrintSlider(  "                 Gamma", !v_color_enable.integer, v_gamma.value, 1, 5);
@@ -1832,6 +1778,10 @@ static void M_Options_ColorControl_Draw (void)
 	DrawQ_Fill(menu_x + x, menu_y + m_opty, 64, 48, c[0], c[1], c[2], 1, 0);
 	DrawQ_SuperPic(menu_x + x + 16, menu_y + m_opty + 16, dither, 16, 16, 0,0, 1,1,1,1, s,0, 1,1,1,1, 0,t, 1,1,1,1, s,t, 1,1,1,1, 0);
 	DrawQ_SuperPic(menu_x + x + 32, menu_y + m_opty + 16, dither, 16, 16, 0,0, 1,1,1,1, u,0, 1,1,1,1, 0,v, 1,1,1,1, u,v, 1,1,1,1, 0);
+
+	char str[60] = "LEFT MOUSE BUTTON - INCREASE; RIGHT MOUSE BUTTON - DECREASE";
+	DrawQ_String(vid_conwidth.integer * 0.5 - strlen(str) * 3, vid_conheight.integer * 0.96, str, 0, 6, 6, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
+
 }
 
 
@@ -1843,6 +1793,7 @@ static void M_Options_ColorControl_Key (int k, int ascii)
 		M_Menu_Options_f ();
 		break;
 
+	case K_MOUSE1:
 	case K_ENTER:
 		m_entersound = true;
 		switch (options_colorcontrol_cursor)
@@ -1882,6 +1833,7 @@ static void M_Options_ColorControl_Key (int k, int ascii)
 			options_colorcontrol_cursor = 0;
 		break;
 
+	case K_MOUSE2:
 	case K_LEFTARROW:
 		M_Menu_Options_ColorControl_AdjustSliders (-1);
 		break;
@@ -1918,7 +1870,7 @@ static const char *quakebindnames[][2] =
 {"impulse 5", 		"sniper"},
 {"impulse 6", 		"grenade"},
 {"menu_team", 		"multiplayer menu"},
-{"impulse 21", 		"menu up"},
+{"impulse 14", 		"flashlight"},
 {"impulse 22", 		"menu down"},
 {"impulse 23", 		"menu select"},
 
@@ -2077,13 +2029,13 @@ static void M_Keys_Draw (void)
 	p = Draw_CachePic ("gfx/ttl_cstm");
 	M_DrawPic ( (320-Draw_GetPicWidth(p))/2, 4, "gfx/ttl_cstm");
 
-	if (bind_grab)
-		M_Print(12, 32, "Press a key or button for this action");
-	else
-		M_Print(18, 32, "Enter to change, backspace to clear");
+
+
+	if (bind_grab) M_Print(12, 32, "Press a key or button for this action");
+	else M_Print(18, 32, "Enter to change, backspace to clear");
 
 // search for known bindings
-	for (i=0 ; i<numcommands ; i++)
+	for (i = 0; i<numcommands ; i++)
 	{
 		y = 48 + 8*i;
 
@@ -2094,8 +2046,7 @@ static void M_Keys_Draw (void)
 			M_PrintRed (16, y, bindnames[i][1]);
 			continue;
 		}
-		else
-			M_Print(16, y, bindnames[i][1]);
+		else M_Print(16, y, bindnames[i][1]);
 
 		Key_FindKeysForCommand (bindnames[i][0], keys, NUMKEYS, 0);
 
@@ -2119,10 +2070,15 @@ static void M_Keys_Draw (void)
 		M_Print(150, y, keystring);
 	}
 
+	CursorMouseMoveOptions(&keys_cursor, 286, 860);
+
 	if (bind_grab)
 		M_DrawCharacter (140, 48 + keys_cursor*8, '=');
 	else
-		M_DrawCharacter (140, 48 + keys_cursor*8, 12+((int)(realtime*4)&1));
+	{
+		DrawQ_Fill(menu_x, 92 + keys_cursor * 8, 320, 8, (0.5 + 0.2 * sin(realtime * M_PI)), 0, 0, 0.5, 0);
+		M_DrawCharacter(140, 48 + keys_cursor * 8, 12 + ((int)(realtime * 4) & 1));
+	}
 }
 
 
@@ -2135,10 +2091,7 @@ static void M_Keys_Key (int k, int ascii)
 	if (bind_grab)
 	{	// defining a key
 		S_LocalSound ("sound/menu/menu1.wav");
-		if (k == K_ESCAPE)
-		{
-			bind_grab = false;
-		}
+		if (k == K_ESCAPE) bind_grab = false;
 		else //if (k != '`')
 		{
 			dpsnprintf (cmd, sizeof(cmd), "bind \"%s\" \"%s\"\n", Key_KeynumToString (k, tinystr, sizeof(tinystr)), bindnames[keys_cursor][0]);
@@ -2179,6 +2132,7 @@ static void M_Keys_Key (int k, int ascii)
 		while (bindnames[keys_cursor][0][0] == '\0');  // skip sections
 		break;
 
+	case K_MOUSE1:
 	case K_ENTER:		// go into bind mode
 		Key_FindKeysForCommand (bindnames[keys_cursor][0], keys, NUMKEYS, 0);
 		S_LocalSound ("sound/menu/menu2.wav");
@@ -2227,7 +2181,7 @@ static void M_Reset_Key (int key, int ascii)
 static void M_Reset_Draw (void)
 {
 	int lines = 2, linelength = 20;
-	M_Background(linelength * 8 + 16, lines * 8 + 16);
+	M_Background2(linelength * 8 + 16, lines * 8 + 16);
 	M_DrawTextBox(0, 0, linelength, lines);
 	M_Print(8 + 4 * (linelength - 19),  8, "Really wanna reset?");
 	M_Print(8 + 4 * (linelength - 11), 16, "Press y / n");
@@ -2241,27 +2195,28 @@ video_resolution_t video_resolutions_hardcoded[] =
 
 {"WideScreen 16x9"           , 1280, 720, 640, 320, 1     },
 {"WideScreen 16x9"           , 1320, 768, 640, 320, 1     },
-{"WideScreen 16x9"           , 1366, 768, 640, 320, 1     },
+//{"WideScreen 16x9"           , 1366, 768, 640, 320, 1     },
+{"WideScreen 16x9"           , 1600,900, 640, 320, 1     },
 {"WideScreen 16x9"           , 1920,1080, 640, 320, 1     },
 {"WideScreen 16x9"           , 2560,1440, 640, 320, 1     },
 {"WideScreen 16x9"           , 3840,2160, 640, 320, 1     },
 {"WideScreen 16x9"           ,  640, 360, 640, 320, 1     },
-{"WideScreen 16x9"           ,  683, 384, 640, 320, 1     },
-{"WideScreen 16x9"           ,  960, 540, 640, 320, 1     },
-{"Standard 4x3"              ,  320, 240, 640, 320, 1     },
-{"Standard 4x3"              ,  400, 300, 640, 320, 1     },
+//{"WideScreen 16x9"           ,  683, 384, 640, 320, 1     },
+//{"WideScreen 16x9"           ,  960, 540, 640, 320, 1     },
+//{"Standard 4x3"              ,  320, 240, 640, 320, 1     },
+//{"Standard 4x3"              ,  400, 300, 640, 320, 1     },
 {"Standard 4x3"              ,  640, 480, 640, 320, 1     },
 {"Standard 4x3"              ,  800, 600, 640, 320, 1     },
 {"Standard 4x3"              , 1024, 768, 640, 320, 1     },
-{"Standard 4x3"              , 1152, 864, 640, 320, 1     },
+//{"Standard 4x3"              , 1152, 864, 640, 320, 1     },
 {"Standard 4x3"              , 1280, 960, 640, 320, 1     },
 {"Standard 4x3"              , 1400,1050, 640, 320, 1     },
 {"Standard 4x3"              , 1600,1200, 640, 320, 1     },
-{"Standard 4x3"              , 1792,1344, 640, 320, 1     },
-{"Standard 4x3"              , 1856,1392, 640, 320, 1     },
+//{"Standard 4x3"              , 1792,1344, 640, 320, 1     },
+//{"Standard 4x3"              , 1856,1392, 640, 320, 1     },
 {"Standard 4x3"              , 1920,1440, 640, 320, 1     },
-{"WideScreen 14x9"           ,  840, 540, 640, 320, 1     },
-{"WideScreen 14x9"           , 1680,1080, 640, 320, 1     },
+//{"WideScreen 14x9"           ,  840, 540, 640, 320, 1     },
+//{"WideScreen 14x9"           , 1680,1080, 640, 320, 1     },
 //{"Standard 4x3"              , 2048,1536, 640, 480, 1     },
 //{"Short Pixel (CRT) 5x4"     ,  320, 256, 320, 256, 0.9375},
 //{"Short Pixel (CRT) 5x4"     ,  640, 512, 640, 512, 0.9375},
@@ -2392,6 +2347,10 @@ static void M_Video_Draw (void)
 
 	t = 0;
 
+	CursorMouseMoveDisplay(&video_cursor);
+	//DrawQ_Fill(menu_x, 120 + video_cursor * 8, 320, 8, (0.5 + 0.2 * sin(realtime * M_PI)), 0, 0, 0.5, 0);
+
+
 	// Current and Proposed Resolution
 	M_Print(16, video_cursor_table[t] - 12, "    Current Resolution");
 	if (vid_supportrefreshrate && vid.userefreshrate && vid.fullscreen)
@@ -2446,6 +2405,10 @@ static void M_Video_Draw (void)
 
 	// Cursor
 	M_DrawCharacter(200, video_cursor_table[video_cursor], 12+((int)(realtime*4)&1));
+
+	char str[60] = "LEFT MOUSE BUTTON - INCREASE; RIGHT MOUSE BUTTON - DECREASE";
+	DrawQ_String(vid_conwidth.integer * 0.5 - strlen(str) * 3, vid_conheight.integer * 0.9, str, 0, 6, 6, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
+
 }
 
 
@@ -2506,6 +2469,7 @@ static void M_Video_Key (int key, int ascii)
 			M_Menu_Options_f ();
 			break;
 
+		case K_MOUSE1:
 		case K_ENTER:
 			m_entersound = true;
 			switch (video_cursor)
@@ -2538,6 +2502,7 @@ static void M_Video_Key (int key, int ascii)
 				video_cursor = 0;
 			break;
 
+		case K_MOUSE2:
 		case K_LEFTARROW:
 			M_Menu_Video_AdjustSliders (-1);
 			break;
@@ -2568,7 +2533,7 @@ void M_Menu_Help_f (void)
 static void M_Help_Draw (void)
 {
 	char vabuf[1024];
-	M_Background(320, 200);
+	M_Background2(320, 200);
 	M_DrawPic (0, 0, va(vabuf, sizeof(vabuf), "gfx/help%i", help_page));
 }
 
@@ -2979,6 +2944,7 @@ void M_GameOptions_Draw(void)
 	if (gameoptions_cursor == 9) M_DrawCharacter(164 + 8 * strlen(hostname.string), gameoptions_cursor_table[gameoptions_cursor], 10 + ((int)(realtime * 4) & 1));
 	else if (gameoptions_cursor == 0) M_DrawCharacter(150, gameoptions_cursor_table[gameoptions_cursor], 12 + ((int)(realtime * 4) & 1));
 	else M_DrawCharacter(150, gameoptions_cursor_table[gameoptions_cursor], 12 + ((int)(realtime * 4) & 1));
+
 }
 
 
@@ -3163,6 +3129,7 @@ static void M_GameOptions_Key (int key, int ascii)
 			gameoptions_cursor = 0;
 		break;
 
+	case K_MOUSE2:
 	case K_LEFTARROW:
 		if (gameoptions_cursor == 0)
 			break;
@@ -3246,38 +3213,59 @@ static void M_ServerList_Draw (void)
 	char vabuf[1024];
 
 	// use as much vertical space as available
-	M_Background2(640, vid_conheight.integer);
+	M_Background2(320, vid_conheight.integer);
 	// scroll the list as the cursor moves
 	ServerList_GetPlayerStatistics(&statnumplayers, &statmaxplayers);
 	s = va(vabuf, sizeof(vabuf), "%i/%i masters %i/%i servers %i/%i players", masterreplycount, masterquerycount, serverreplycount, serverquerycount, statnumplayers, statmaxplayers);
-	M_PrintRed((640 - strlen(s) * 8) / 2, 32, s);
+	M_Print((320 - strlen(s) * 8) / 2, 32, s);
 	if (*m_return_reason) M_Print(16, menu_height - 8, m_return_reason);
 	y = 48;
 	visible = (int)((menu_height - 16 - y) / 8 / 2);
 	start = bound(0, slist_cursor - (visible >> 1), serverlist_viewcount - visible);
 	end = min(start + visible, serverlist_viewcount);
 
-	//p = Draw_CachePic ("gfx/p_multi");
+	CursorMouseMoveServers(&slist_cursor, 150, 950, end);
+
+	//auto p = Draw_CachePic ("gfx/p_multi");
 	//M_DrawPic((640 - Draw_GetPicWidth(p)) / 2, 4, "gfx/p_multi");
+	DrawQ_String(menu_x+42, 6, "SERVER BROWSER", 15, 16, 16, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
+	DrawQ_Fill(menu_x, menu_y + y, 320, menu_height-16 - y  - menu_y, 0.6, 0.53, 0.4, 0.5, 0);
+
 	if (end > start)
 	{
 		for (n = start;n < end;n++)
 		{
 			serverlist_entry_t *entry = ServerList_GetViewEntry(n);
-			DrawQ_Fill(menu_x, menu_y + y, 640, 16, n == slist_cursor ? (0.5 + 0.2 * sin(realtime * M_PI)) : 0, 0, 0, 0.5, 0);
+			DrawQ_Fill(menu_x, menu_y + y, 320, 16, n == slist_cursor ? (0.5 + 0.2 * sin(realtime * M_PI)) : 0, 0, 0, 0.5, 0);
 			M_PrintColored(0, y, entry->line1);y += 8;
 			M_PrintColored(0, y, entry->line2);y += 8;
 		}
 	}
 	else if (realtime - masterquerytime > 10)
 	{
-		if (masterquerycount) M_Print(0, y, "No servers found");
-		else M_Print(0, y, "No master servers found (network problem?)");
+		if (masterquerycount)
+		{
+			char str[17] = "NO SERVERS FOUND";
+			DrawQ_String(vid_conwidth.integer * 0.5 - strlen(str) * 4, vid_conheight.integer * 0.5, str, 0, 8, 8, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
+		}
+		else 
+		{
+			char str[17] = "CAN NOT CONNECT";
+			DrawQ_String(vid_conwidth.integer * 0.5 - strlen(str) * 4, vid_conheight.integer * 0.5, str, 0, 8, 8, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
+		}
 	}
 	else
 	{
-		if (serverquerycount) M_Print(0, y, "Querying servers");
-		else M_Print(0, y, "Querying master servers");
+		if (serverquerycount)
+		{
+			char str[17] = "QUERYING SERVERS";
+			DrawQ_String(vid_conwidth.integer * 0.5 - strlen(str) * 4, vid_conheight.integer * 0.5, str, 0, 8, 8, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
+		}
+		else
+		{
+			char str[24] = "QUERYING MASTER SERVERS";
+			DrawQ_String(vid_conwidth.integer * 0.5 - strlen(str) * 4, vid_conheight.integer * 0.5, str, 0, 8, 8, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
+		}
 	}
 }
 
@@ -3309,6 +3297,7 @@ static void M_ServerList_Key(int k, int ascii)
 		if (slist_cursor >= serverlist_viewcount) slist_cursor = 0;
 		break;
 
+	case K_MOUSE1:
 	case K_ENTER:
 		S_LocalSound ("sound/menu/menu2.wav");
 		if (serverlist_viewcount) Cbuf_AddText(va(vabuf, sizeof(vabuf), "connect \"%s\"\n", ServerList_GetViewEntry(slist_cursor)->info.cname));
@@ -3364,17 +3353,15 @@ void M_Draw (void)
 	GetMyCursorPos();
 	CursorX = mouseX * 1000 / vid.mode.width;
 	CursorY = mouseY * 1000 / vid.mode.height;
-	//char str[50];
-	//sprintf(str, "X=%d Y=%d\nMX=%d MY=%d", CursorX, CursorY, mouseX, mouseY);
-	//DrawQ_String(0, 0, str, 50, 20, 20, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
-	//char str[50];
-	//sprintf(str, "X=%d Y=%d\nMX=%d MY=%d", CursorX, CursorY, mouseX, mouseY);
-	//DrawQ_String(0, 0, str, 50, 20, 20, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
 
-	const char* watermark = "KleskBY";
-	const char* watermark_date = __DATE__;
-	//DrawQ_String(0, 0, watermark, 50, 20, 20, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
-	//DrawQ_String(200, 0, watermark_date, 50, 20, 20, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
+	//char str[50];
+	//sprintf(str, "X=%d Y=%d\nMX=%0.7f MY=%d", CursorX, CursorY, realtime, mouseY);
+	//DrawQ_String(0, 0, str, 50, 10, 10, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
+
+	//const char* watermark = "KleskBY";
+	//const char* watermark_date = __DATE__;
+	//DrawQ_String(0, 0, watermark, 50, 5, 5, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
+	//DrawQ_String(200, 0, watermark_date, 50, 5, 5, 1, 1, 1, 1, 0, NULL, true, FONT_MENU);
 
 	switch (m_state)
 	{
